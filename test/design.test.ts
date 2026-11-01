@@ -62,6 +62,20 @@ describe("design", () => {
     expect(result.specs[0]!.wordmark.text).toBe("Scout");
   });
 
+  it("writes the buyer's brandName in full, even when the model shortens it in a wordmark", async () => {
+    const logo = (text: string) => ({ mark: { kind: "icon", icon: "shield" }, wordmark: { text, font: "sora-600" }, layout: "horizontal" });
+    llmReplies(JSON.stringify({ brief: { name: "Self Control" }, logos: [logo("SELF CONTROL"), logo("Self Control Academy")] }));
+    const brandName = "Self Control Fight Academy"; // 26 chars: over the old 24-char cap on model text
+    const result = await design(digest, { repoUrl: digest.url, style: "minimal", count: 2, brandName }, { llm: [groq], heuristicFallback: true, seed: "t" });
+    expect(result.specs.map((s) => s.wordmark.text)).toEqual([brandName, brandName]);
+  });
+
+  it("keeps the model's wordmark text when the buyer gave no name", async () => {
+    llmReplies(JSON.stringify({ logos: [{ wordmark: { text: "Agent Search Stellar Discovery" } }] }));
+    const result = await design(digest, { repoUrl: digest.url, style: "minimal", count: 1 }, { llm: [groq], heuristicFallback: true, seed: "t" });
+    expect(result.specs[0]!.wordmark.text).toBe("Agent Search Stellar Discovery");
+  });
+
   it("falls through providers on 429, then to the heuristic designer", async () => {
     const fetch = llmReplies(429, 500);
     const result = await design(digest, { repoUrl: digest.url, style: "tech", count: 3 }, { llm: [groq, { ...groq, id: "gemini" }], heuristicFallback: true, seed: "t" });
