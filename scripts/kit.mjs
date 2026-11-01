@@ -119,9 +119,15 @@ switch (command) {
     // --dev isn't a try flag: it reads the provider as it is.
     run(KIT, ["try", SERVICE, ...withManifest(rest).filter((a) => a !== "--dev")]);
     break;
-  case "register":
+  case "register": {
+    // A registration publishes the service's public URL on chain, so it needs the deployed server.
+    if (findManifest().url.startsWith("http://")) {
+      console.error("✗ Nothing deployed yet: registration needs the public server. Run npm run deploy first (DEPLOY.md step 4).");
+      process.exit(1);
+    }
     stream(["register", ...withManifest(rest).filter((a) => a !== "--dev")], afterRegister);
     break;
+  }
   case "verify": {
     const { url, from } = findManifest();
     console.log(`→ service: ${url}  (${from})\n`);
