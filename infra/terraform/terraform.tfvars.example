@@ -1,0 +1,35 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. Values marked ★ are required.
+
+# ── The switch ── change to "mainnet" and run `terraform apply` ─────────────────
+network = "testnet"
+
+# ── Oracle Cloud ─────────────────────────────────────────────────────────────
+oci_region   = "eu-frankfurt-1"            # ★ your HOME region
+tenancy_ocid = "ocid1.tenancy.oc1..xxxx"   # ★ from ~/.oci/config
+admin_cidr   = "203.0.113.7/32"            # ★ your IP: curl -4 ifconfig.me
+# ssh_public_key_path  = "~/.ssh/id_ed25519.pub"
+# ssh_private_key_path = "~/.ssh/id_ed25519"
+# availability_domain_index = 0            # try 1 or 2 on "Out of host capacity"
+
+# ── Cloudflare ───────────────────────────────────────────────────────────────
+cloudflare_api_token  = "xxxx"             # ★ Tunnel: Edit + DNS: Edit
+cloudflare_account_id = "xxxx"             # ★
+cloudflare_zone_id    = "xxxx"             # ★
+hostname              = "logo.example.com" # ★
+
+# ── App ──────────────────────────────────────────────────────────────────────
+app_repo_url = "https://github.com/you/stellar-logo-agent.git" # ★
+app_git_ref  = "main"
+price_usdc   = "0.10"
+
+pay_to_testnet   = "G..."                  # ★ for testnet
+agent_id_testnet = ""                      # fill after registering, then apply
+
+pay_to_mainnet              = ""           # ★ for mainnet
+agent_id_mainnet            = ""
+facilitator_api_key_mainnet = ""           # ★ for mainnet
+
+groq_api_key       = ""                    # at least one LLM key is recommended
+gemini_api_key     = ""
+openrouter_api_key = ""
+github_token       = ""

@@ -1,0 +1,54 @@
+{
+  "name": "stellar-logo-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paid logo-designer agent on Stellar: a GitHub repo in, SVG logos and a PDF presentation out. Provider Standard v1, x402 USDC.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "setup:kit": "bash scripts/setup-kit.sh",
+    "build": "tsc -p tsconfig.json",
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/server.js",
+    "dev": "npm run build && npm start",
+    "demo": "npm run build --silent && node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/cli/demo.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "provider-kit": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/provider-kit/dist/cli/index.js",
+    "verifier": "node --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/verifier/dist/cli/index.js",
+    "stellar-pay": "node --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/payment-client/dist/cli.js"
+  },
+  "dependencies": {
+    "@fontsource/archivo-black": "5.3.0",
+    "@fontsource/dm-serif-display": "5.3.0",
+    "@fontsource/fredoka": "5.3.0",
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@fontsource/montserrat": "5.3.0",
+    "@fontsource/orbitron": "5.3.0",
+    "@fontsource/outfit": "5.3.0",
+    "@fontsource/playfair-display": "5.3.0",
+    "@fontsource/poppins": "5.3.0",
+    "@fontsource/righteous": "5.3.0",
+    "@fontsource/sora": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
+    "@fontsource/syne": "5.3.0",
+    "@hono/node-server": "2.1.5",
+    "@stellar-agent-services/protocol": "file:vendor/stellar-agent-services/packages/protocol",
+    "@stellar-agent-services/provider-kit": "file:vendor/stellar-agent-services/packages/provider-kit",
+    "hono": "4.13.14",
+    "lucide-static": "1.63.0",
+    "opentype.js": "1.3.4",
+    "pdfkit": "0.20.2",
+    "svg-to-pdfkit": "0.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/opentype.js": "1.3.10",
+    "@types/pdfkit": "0.17.7",
+    "typescript": "6.0.3",
+    "vitest": "4.1.12"
+  }
+}

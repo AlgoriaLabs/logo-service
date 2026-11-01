@@ -1,0 +1,40 @@
+{
+  "owner": "berkingurcan",
+  "repo": "stellar-agent-search",
+  "url": "https://github.com/berkingurcan/stellar-agent-search",
+  "name": "stellar-agent-search",
+  "description": "Read-only MCP server to discover, rank and vet on-chain stellar-8004 agents on Stellar mainnet",
+  "topics": [
+    "mcp",
+    "stellar",
+    "ai-agents",
+    "x402",
+    "erc-8004"
+  ],
+  "language": "TypeScript",
+  "keywords": [
+    "stellar",
+    "mcp",
+    "agents",
+    "agent",
+    "mainnet",
+    "chain",
+    "erc",
+    "read",
+    "x402",
+    "registry",
+    "search",
+    "discover",
+    "rank",
+    "server",
+    "vet"
+  ],
+  "readmeExcerpt": "# stellar-agent-search\n> **A read-only discovery layer on top of the stellar-8004 registry — the ERC-8004-style Identity/Reputation/Validation contracts on Stellar mainnet.**\n> It adds no contracts and forks nothing: it exposes the existing on-chain registry to MCP clients, keeps indexed reputation explicitly declared-vs-verified, and proves the full agent-finds-agent loop with recorded mainnet transactions.\n**npm** · **GitHub** · **Docs** · **Evidence package**\n| npm | MCP Registry | Remote endpoint | Mainnet proof |\n| ✅ `0.1.0` | ✅ published & verified | ⏳ not deployed yet | ✅ x402 payment · feedback |\nThere are two official interfaces, not two copies of the stack. TypeScript applications, registration, and\nsigned writes use the canonical `@trionlabs/stellar8004`\nSDK from `trionlabs/stellar-8004`; MCP clients and terminal discovery use this package, which exact-pins that\nSDK internally. The upstream repo's restricted Supabase Studio `/mcp` is database-operator tooling behind\nSSH/IP controls, not an agent-registry MCP and must never be exposed as this runtime. See\nthe integration boundary.\nA **read-only, keyless** MCP server (and human CLI) that lets an AI agent — or you — **discover, rank, and\nvet on-chain stellar-8004 agents** on Stellar mainnet, then prepare an x402\n(USDC pay-per-call) payment. One binary speaks the Model Context Protocol\nover stdio to Claude Code / Cursor / Windsurf / Cline / VS Code, and doubles as a plain-terminal tool. A\nseparate Cloudflare Worker implementation exposes the same surface over stateless Streamable HTTP, but that\nremote endpoint is **not live yet**; use the local stdio transport until its deployment canary passes.\n> **AI agents:** read **AGENTS.md** first. It routes each goal to the right document: using the\n> tools, integrating from code, building a service other agents can find and pay\n> (provider guide), or changing this repo. Link index:\n> llms.txt · machine-readable schemas: mcp-surface.json.\n## Why this exists: declared data vs. what the chain read can prove\nOff-chain agent directories (A2A cards, the MCP Registry, OASF, NANDA) list **self-declared** agents. That is\nexactly where the trust gap lives. A 2026 study of the ERC-8004 ecosystem (arXiv 2606.26028) found that only\n**3–15% of registrations have a live endpoint**, and **59–91% of \"reviewers\" are Sybils**.\nstellar-8004 is the only non-EVM ERC-8004 implementation **we are aware of** running on mainnet (66 agents on",
+  "colorHints": [],
+  "files": [
+    "README.md",
+    "package.json",
+    "src",
+    "web"
+  ]
+}

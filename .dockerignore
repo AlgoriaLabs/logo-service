@@ -1,0 +1,12 @@
+node_modules
+vendor
+dist
+out
+data
+.env
+.env.*
+!.env.example
+infra
+test
+.git
+*.log
