@@ -9,10 +9,13 @@ data/
 .env.*
 !.env.example
 *.log
-# Terraform
-infra/terraform/.terraform/
-infra/terraform/*.tfstate
-infra/terraform/*.tfstate.*
-infra/terraform/terraform.tfvars
-infra/terraform/*.auto.tfvars
-infra/terraform/.terraform.lock.hcl.bak
+# Terraform (deploy/terraform/state.hcl and .terraform.lock.hcl ARE committed)
+deploy/terraform/.terraform/
+deploy/terraform/.build/
+deploy/terraform/terraform.tfvars
+deploy/terraform/*.tfstate
+deploy/terraform/*.tfstate.*
+deploy/state/.terraform/
+deploy/state/*.tfstate
+deploy/state/*.tfstate.*
+deploy/state/.terraform.lock.hcl

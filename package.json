@@ -10,15 +10,21 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
     "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/server.js",
     "dev": "npm run build && npm start",
     "demo": "npm run build --silent && node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/cli/demo.js",
-    "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "provider-kit": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/provider-kit/dist/cli/index.js",
-    "verifier": "node --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/verifier/dist/cli/index.js",
-    "stellar-pay": "node --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/payment-client/dist/cli.js",
-    "vendor:kit": "bash scripts/vendor-kit.sh"
+    "kit": "node scripts/kit.mjs kit",
+    "wallet": "node scripts/kit.mjs wallet",
+    "check": "node scripts/kit.mjs check",
+    "try": "node scripts/kit.mjs try",
+    "register": "node scripts/kit.mjs register",
+    "verify": "node scripts/kit.mjs verify",
+    "update-kit": "bash scripts/vendor-kit.sh",
+    "deploy": "node scripts/deploy.mjs",
+    "ci:setup": "node scripts/ci-setup.mjs",
+    "ci:sync": "node scripts/ci-setup.mjs --sync"
   },
   "dependencies": {
     "@fontsource/archivo-black": "5.3.0",

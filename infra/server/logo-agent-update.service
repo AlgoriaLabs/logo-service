@@ -1,9 +1,0 @@
-[Unit]
-Description=Stellar Logo Agent: pull and run the latest image
-After=docker.service network-online.target
-Requires=docker.service
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/opt/logo-agent/update.sh

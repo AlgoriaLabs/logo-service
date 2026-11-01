@@ -7,7 +7,7 @@ Buyers pay per job in USDC through x402, and find it with [stellar-agent-search]
 Built on [stellar-agent-services](https://github.com/AlgoriaLabs/stellar-agent-services) Provider Standard v1, with
 `provider-kit`. Runs on testnet or mainnet: one variable switches it. Runs for $0/month on free tiers.
 
-👉 **Deploying it: [DEPLOY.md](DEPLOY.md)** (one page) · the long version: [SETUP.md](SETUP.md).
+👉 **Deploying it: [DEPLOY.md](DEPLOY.md)** (one page) · on your laptop first: [SETUP.md](SETUP.md).
 
 ## How it works
 
@@ -56,26 +56,26 @@ one small LLM call, and a prompt injection in a README can't produce arbitrary S
 | Soroban RPC | SDF public testnet | `https://mainnet.sorobanrpc.com` |
 | Job database | `jobs-testnet.sqlite` | `jobs-mainnet.sqlite` |
 
-With Terraform, it's `network = "mainnet"` in `terraform.tfvars` and `terraform apply` (or `make switch NET=mainnet`).
+On the server it's one line in `deploy/terraform/terraform.tfvars`: `stellar_network = "mainnet"`, then `npm run deploy`.
 
-## CI/CD
+## Deployment and CI/CD
+
+One Oracle Always Free Ampere VM (1 OCPU / 6 GB) with Caddy for HTTPS (Let's Encrypt, on `<ip>.sslip.io` or your
+domain). Terraform zips this repo, uploads it over SSH, builds it on the server, checks the new config, then
+switches releases. A wrong setting stops the deploy and the old release keeps serving.
 
 ```
-git push main ──▶ ci (typecheck, tests, offline render, terraform validate, shellcheck)
-                   └─▶ image: ghcr.io/algorialabs/logo-service :main :sha-<7>   (amd64 + arm64)
-                         └─▶ server timer pulls it (≤ 2 min, pull-based: CI holds no server credentials)
-                               └─▶ verify: /healthz reports the new version → verifier check
-                                     → provider-kit check → provider-kit try (one real testnet payment, optional)
-git tag v1.2.0 ──▶ same, tagged :1.2.0 :stable  (the mainnet server follows stable)
+npm run deploy  (laptop)  ┐
+git push main   (CI/CD)   ┴─▶ terraform apply ─▶ upload + build on the VM ─▶ config check ─▶ switch ─▶ /healthz
+                              state: private OCI bucket, shared and locked, so laptop and CI never collide
 ```
 
 | Workflow | Runs on | Does |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | pull requests, branch pushes, and as CD's first stage | tests, render, Terraform `fmt`/`validate`, shellcheck, image build |
-| `.github/workflows/cd.yml` | push to `main`, `v*` tags, manual | publishes the image, then verifies the live service when `DEPLOY_URL` is set |
+| `.github/workflows/ci-cd.yml` → `test` | every push and pull request | typecheck, tests, sample logos, `terraform validate` |
+| `.github/workflows/ci-cd.yml` → `deploy` | push to `main`, once `npm run ci:setup` set `DEPLOY_ENABLED=true` | `scripts/deploy.mjs --ci`, then `npm run check` |
 
-The server follows one image tag (`app_tag`): `main` (testnet), `stable` (mainnet) or `sha-<7>` to pin a build.
-Rolling back is `make rollback TAG=sha-abc1234`. Infrastructure changes stay a reviewed `make apply` from your machine.
+Step by step: [DEPLOY.md](DEPLOY.md).
 
 ## Layout
 
@@ -92,23 +92,25 @@ Rolling back is `make rollback TAG=sha-abc1234`. Infrastructure changes stay a r
 | `src/pipeline/pdf.ts` | PDF presentation |
 | `src/pipeline/files.ts` | Output storage and expiry |
 | `src/cli/demo.ts` | `npm run demo`: the pipeline without payments |
-| `infra/terraform/` | Oracle Always Free VM + Cloudflare Tunnel + the server's `.env` and updater |
-| `infra/server/` | Production compose (image + cloudflared) and the 2-minute auto-update timer |
-| `.github/workflows/` | CI and CD |
-| `Dockerfile`, `compose.yaml` | App image (amd64/arm64) and a local container run |
-| `vendor/`, `KIT_REF` | The stellar-agent-services kit, packed (`scripts/vendor-kit.sh`, `make kit`) |
+| `src/cli/check-config.ts` | The config check a deploy runs before switching releases |
+| `deploy/terraform/` | The VM, network, reserved IP, Caddy and the deploy step |
+| `deploy/state/` | The private bucket for Terraform state (created by the first `npm run deploy`) |
+| `scripts/` | `deploy.mjs`, `ci-setup.mjs`, `kit.mjs` (wallet, check, try, register, verify), `vendor-kit.sh` |
+| `vendor/`, `KIT_REF` | The stellar-agent-services kit, packed (`npm run update-kit`) |
 | `test/` | Offline tests, including a full 402 → pay → result job |
 
 ## Development
 
 ```bash
-make setup        # install; the kit is already in vendor/
-make test         # offline tests
-make demo         # draw logos without payments
-make dev          # the paid service on http://localhost:8787
-make try-local    # pay it once with test money: no wallet to set up
-make check-local  # Provider Standard self-check + how agents see you
+npm ci            # the kit is already in vendor/
+npm test          # offline tests
+npm run demo      # draw logos without payments
+npm run dev       # the paid service on http://localhost:8787
+npm run try       # pay it once with test money: no wallet to set up
+npm run check     # Provider Standard self-check + how agents see you
 ```
+
+Laptop guide: [SETUP.md](SETUP.md).
 
 ### The stellar-agent-services kit
 
@@ -117,14 +119,14 @@ The kit isn't on npm yet, so `vendor/` holds its packages (`protocol`, `payment-
 `overrides` in `package.json` keep one copy of the Stellar SDK, as the kit requires. To update:
 
 ```bash
-make kit REF=main    # clone + build + pack at that ref, reinstall, run the tests
+npm run update-kit -- main   # clone + build + pack at that ref; then npm install && npm test
 ```
 
 ## Security
 
 - **No Stellar secret key anywhere**: the server knows only public `payTo` addresses. The owner steps (USDC
   trustline, 8004 registration, validation requests) are approved in your own wallet on a page `provider-kit`
-  opens on your laptop. CI holds no secrets either: the server pulls images instead of CI pushing to it.
+  opens on your laptop, so no wallet key ever reaches CI or the server.
 - Repository content is untrusted: it is labelled as such in the prompt, and nothing the model returns is used
   unless it matches the catalog.
 - SVGs contain no `<text>` (it is outlined), scripts, links or external references; files are served with a sandboxing CSP.

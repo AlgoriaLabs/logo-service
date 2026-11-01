@@ -1,0 +1,79 @@
+#cloud-config
+# Machine setup for logo-agent on Ubuntu 24.04 (ARM). Runs once, at first boot.
+# No secrets and no app code here: deploy.tf uploads those, so they can change without a new VM.
+
+package_update: true
+package_upgrade: true
+packages:
+  - git
+  - unzip
+  - curl
+  - ca-certificates
+  - gnupg
+  - debian-keyring
+  - debian-archive-keyring
+  - apt-transport-https
+  - iptables-persistent
+  - unattended-upgrades
+
+users:
+  - default
+  - name: logo
+    system: true
+    shell: /usr/sbin/nologin
+    home: /var/lib/logo-agent
+
+write_files:
+  - path: /etc/systemd/system/logo-agent.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=logo-agent (paid Stellar logo designer service)
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      User=logo
+      Group=logo
+      WorkingDirectory=/opt/logo-agent/current
+      EnvironmentFile=/etc/logo-agent/env
+      Environment=NODE_ENV=production
+      Environment=DATA_DIR=/var/lib/logo-agent
+      Environment=PORT=8787
+      ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning dist/server.js
+      Restart=on-failure
+      RestartSec=5
+      # 78 = bad config: don't restart-loop, fix the env and redeploy.
+      RestartPreventExitStatus=78
+      # Hardening: the app only writes its data dir.
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ProtectHome=true
+      PrivateTmp=true
+      ReadWritePaths=/var/lib/logo-agent
+      MemoryMax=2G
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+runcmd:
+  # Node.js 24 (NodeSource) — provider-kit needs >= 22.13 for node:sqlite.
+  - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+  - apt-get install -y nodejs
+  # Caddy: HTTPS with automatic Let's Encrypt certificates.
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' -o /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update && apt-get install -y caddy
+  # Oracle's Ubuntu images block everything but SSH in iptables, on top of the security list.
+  - iptables -I INPUT -p tcp -m multiport --dports 80,443 -m conntrack --ctstate NEW -j ACCEPT
+  - netfilter-persistent save
+  - mkdir -p /opt/logo-agent/releases /etc/logo-agent /var/lib/logo-agent
+  - chown -R logo:logo /opt/logo-agent /var/lib/logo-agent
+  - chmod 750 /var/lib/logo-agent
+  - systemctl daemon-reload
+  - systemctl enable logo-agent caddy
