@@ -1,5 +1,7 @@
 # Setup guide
 
+> Just want it running? [DEPLOY.md](DEPLOY.md) is the one-page version. This is the long one.
+
 > **TL;DR** — `make setup` → `make demo` → `make wallet` → push to GitHub (CD publishes the image) →
 > `make apply` → `make register` → `make try`. Mainnet later: `make release V=1.0.0` + `make switch NET=mainnet`.
 

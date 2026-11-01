@@ -7,7 +7,7 @@ Buyers pay per job in USDC through x402, and find it with [stellar-agent-search]
 Built on [stellar-agent-services](https://github.com/AlgoriaLabs/stellar-agent-services) Provider Standard v1, with
 `provider-kit`. Runs on testnet or mainnet: one variable switches it. Runs for $0/month on free tiers.
 
-👉 **Setting it up: [SETUP.md](SETUP.md)** (step-by-step, testnet first).
+👉 **Deploying it: [DEPLOY.md](DEPLOY.md)** (one page) · the long version: [SETUP.md](SETUP.md).
 
 ## How it works
 
