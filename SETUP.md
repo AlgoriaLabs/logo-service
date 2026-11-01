@@ -25,7 +25,7 @@ that wallet. The server only ever knows your public `G…` address.
 - [ ] **1.2 Install.**
 
   ```bash
-  git clone https://github.com/AlgoriaLabs/stellar-logo-agent.git && cd stellar-logo-agent
+  git clone https://github.com/AlgoriaLabs/logo-service.git && cd logo-service
   make setup
   ```
 
@@ -81,16 +81,16 @@ All free. Paste each value into a scratch note.
 The pipeline: **push → CI tests → image on GHCR → server pulls it within ~2 min → CD checks the live service.**
 CI never logs in to the server; the server pulls.
 
-- [ ] **3.1 Push** to `AlgoriaLabs/stellar-logo-agent` (empty repo, no README):
+- [ ] **3.1 Push** to `AlgoriaLabs/logo-service` (empty repo, no README):
 
   ```bash
-  git remote add origin git@github.com:AlgoriaLabs/stellar-logo-agent.git
+  git remote add origin git@github.com:AlgoriaLabs/logo-service.git
   git push -u origin main
   ```
 
   ✅ *Actions → cd* goes green: `ci` → `publish image`. (`verify` is skipped until 3.3.)
 
-- [ ] **3.2 Make the image public** (once): *AlgoriaLabs → Packages → stellar-logo-agent → Package settings →
+- [ ] **3.2 Make the image public** (once): *AlgoriaLabs → Packages → logo-service → Package settings →
   Change visibility → Public*. The server then pulls with no credentials.
   🧯 Must stay private? Create a classic token with `read:packages` → 📝 `ghcr_username`, `ghcr_token`.
 
@@ -122,7 +122,7 @@ CI never logs in to the server; the server pulls.
 
   It creates: VCN + SSH-only firewall, one Always Free Ampere VM, a Cloudflare Tunnel, a DNS record. Then it installs
   `.env`, the compose file and the 2-minute auto-update timer, and starts the app from the published image.
-  ✅ Ends with `Running ghcr.io/algorialabs/stellar-logo-agent:main on testnet`.
+  ✅ Ends with `Running ghcr.io/algorialabs/logo-service:main on testnet`.
 
 - [ ] **4.3 Look at it.** `https://<hostname>/healthz` → `{"ok":true,"network":"testnet","version":"<sha>"}`.
 

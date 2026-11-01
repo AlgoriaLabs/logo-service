@@ -38,8 +38,8 @@ This is where buyers' money goes. Your own browser wallet works.
 - [ ] Run:
 
 ```bash
-git clone https://github.com/AlgoriaLabs/stellar-logo-agent.git
-cd stellar-logo-agent
+git clone https://github.com/AlgoriaLabs/logo-service.git
+cd logo-service
 make setup
 make wallet
 ```
@@ -56,7 +56,7 @@ The server runs the image GitHub builds. Do this once so the first image exists.
 
 - [ ] Push to `main` (skip if the repo is already on GitHub with CI green).
 - [ ] GitHub → **Actions** → `cd` → wait for **ci ✓ → publish image ✓**.
-- [ ] Make the image public: GitHub → **AlgoriaLabs** → **Packages** → `stellar-logo-agent` → **Package settings** →
+- [ ] Make the image public: GitHub → **AlgoriaLabs** → **Packages** → `logo-service` → **Package settings** →
       **Change visibility** → **Public**.
 
 ---
@@ -93,7 +93,7 @@ make apply            # shows the plan, type: yes
 
 Minutes 2–8 show `Still creating…`. **Normal.** The server is installing Docker. Get water.
 
-✅ You see `Running ghcr.io/algorialabs/stellar-logo-agent:main on testnet`.
+✅ You see `Running ghcr.io/algorialabs/logo-service:main on testnet`.
 Open `https://<hostname>/healthz` → `{"ok":true,"network":"testnet",…}`.
 
 ---

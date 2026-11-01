@@ -20,7 +20,7 @@ hostname              = "logo.example.com" # ★
 # ── App ──────────────────────────────────────────────────────────────────────
 # The image CI publishes, and the channel the server follows:
 #   "main"   = every push to main (testnet)   "stable" = every v* tag (mainnet)   "sha-abc1234" = pinned
-image      = "ghcr.io/algorialabs/stellar-logo-agent"
+image      = "ghcr.io/algorialabs/logo-service"
 app_tag    = "main"
 price_usdc = "0.10"
 # ghcr_username = ""   # only if the image is private

@@ -102,7 +102,7 @@ variable "hostname" {
 variable "image" {
   description = "Container image CI publishes (lowercase)."
   type        = string
-  default     = "ghcr.io/algorialabs/stellar-logo-agent"
+  default     = "ghcr.io/algorialabs/logo-service"
 }
 
 variable "app_tag" {

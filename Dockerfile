@@ -1,7 +1,7 @@
 # Stellar Logo Agent: the provider, plus the stellar-agent-services CLIs (provider-kit, stellar-pay).
 # Multi-arch (amd64, arm64 for Oracle Ampere). The kit comes from vendor/ (packed tarballs), so no git or kit build.
 #
-#   docker build -t stellar-logo-agent --build-arg APP_VERSION=$(git rev-parse --short HEAD) .
+#   docker build -t logo-service --build-arg APP_VERSION=$(git rev-parse --short HEAD) .
 #
 # Jobs and generated files live in /data: give it a persistent volume. The image holds no Stellar secret key.
 
@@ -27,7 +27,7 @@ RUN npm ci --omit=dev --no-audit --no-fund --ignore-scripts \
 FROM node:24-bookworm-slim
 ARG APP_VERSION=dev
 ENV NODE_ENV=production DATA_DIR=/data PORT=8787 APP_VERSION=${APP_VERSION}
-LABEL org.opencontainers.image.source="https://github.com/AlgoriaLabs/stellar-logo-agent" \
+LABEL org.opencontainers.image.source="https://github.com/AlgoriaLabs/logo-service" \
       org.opencontainers.image.description="Paid logo-designer agent on Stellar (Provider Standard v1)" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.revision="${APP_VERSION}"

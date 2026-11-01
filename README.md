@@ -62,7 +62,7 @@ With Terraform, it's `network = "mainnet"` in `terraform.tfvars` and `terraform 
 
 ```
 git push main ──▶ ci (typecheck, tests, offline render, terraform validate, shellcheck)
-                   └─▶ image: ghcr.io/algorialabs/stellar-logo-agent :main :sha-<7>   (amd64 + arm64)
+                   └─▶ image: ghcr.io/algorialabs/logo-service :main :sha-<7>   (amd64 + arm64)
                          └─▶ server timer pulls it (≤ 2 min, pull-based: CI holds no server credentials)
                                └─▶ verify: /healthz reports the new version → verifier check
                                      → provider-kit check → provider-kit try (one real testnet payment, optional)
