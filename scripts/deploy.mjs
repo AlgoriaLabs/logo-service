@@ -13,6 +13,7 @@ import {
   CI_SSH_KEY,
   checkTerraformVersion,
   ciEnabled,
+  ensureSshKey,
   ensureStateBucket,
   expandHome,
   fail,
@@ -37,6 +38,7 @@ let justCreated = false;
 if (ci) {
   if (!existsSync(STATE_HCL)) fail("deploy/terraform/state.hcl isn't committed. Run npm run ci:setup on your laptop, then commit it.");
 } else {
+  ensureSshKey(vars);
   justCreated = ensureStateBucket(vars);
 }
 initMain({ justCreated });

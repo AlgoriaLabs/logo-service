@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 import {
   checkTerraformVersion,
   ciOciConfig,
-  DEFAULT_SSH_KEY,
+  ensureSshKey,
   ensureStateBucket,
   expandHome,
   fail,
@@ -57,9 +57,7 @@ try {
 }
 if (!existsSync(oci.keyFile)) fail(`The OCI API key file ${oci.keyFile} (key_file= in ~/.oci/config) is missing.`);
 
-const sshPrivate = expandHome(vars["ssh_private_key_path"] ?? DEFAULT_SSH_KEY);
-const sshPublic = expandHome(vars["ssh_public_key_path"] ?? `${DEFAULT_SSH_KEY}.pub`);
-for (const path of [sshPrivate, sshPublic]) if (!existsSync(path)) fail(`SSH key ${path} is missing (DEPLOY.md step 1).`);
+const { privatePath: sshPrivate, publicPath: sshPublic } = ensureSshKey(vars);
 if (/^ssh-(ed25519|rsa)/.test(readFileSync(sshPrivate, "utf8"))) fail(`${sshPrivate} looks like a public key. Point ssh_private_key_path at the private one.`);
 
 const cidr = vars["ssh_allowed_cidr"];

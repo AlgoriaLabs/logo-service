@@ -27,8 +27,8 @@ Skip what you already have from another project: the Oracle API key and Gemini k
 - [ ] **Oracle API key**: console → profile icon → **My profile** → **API keys** → **Add API key** →
       **Generate API key pair** → **Download private key** → **Add**.
       Copy the text box it shows into `~/.oci/config`. Fix its `key_file=` line to point at the downloaded key.
-- [ ] **SSH key, just for this server**:
-      `ls ~/.ssh/logo-service.pub || ssh-keygen -t ed25519 -N "" -C logo-service -f ~/.ssh/logo-service`
+- [ ] **SSH key, just for this server**: nothing to do. `npm run deploy` creates `~/.ssh/logo-service` the first time.
+      To make it yourself: `ssh-keygen -t ed25519 -N "" -C logo-service -f ~/.ssh/logo-service`
 - [ ] **Gemini key** (free): [aistudio.google.com](https://aistudio.google.com) → **Get API key**
 
 ---

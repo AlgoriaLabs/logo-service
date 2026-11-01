@@ -132,6 +132,30 @@ export function fail(message) {
   process.exit(1);
 }
 
+/**
+ * The server's SSH key pair, from terraform.tfvars or the default path. Creates it with ssh-keygen when neither
+ * half exists yet (a key only this server uses, no passphrase). Fails if only one half exists: regenerating would
+ * lock you out of a server that already trusts the old public key.
+ */
+export function ensureSshKey(vars) {
+  const privatePath = expandHome(vars["ssh_private_key_path"] ?? DEFAULT_SSH_KEY);
+  const publicPath = expandHome(vars["ssh_public_key_path"] ?? `${DEFAULT_SSH_KEY}.pub`);
+  const hasPrivate = existsSync(privatePath);
+  const hasPublic = existsSync(publicPath);
+  if (hasPrivate && hasPublic) return { privatePath, publicPath };
+  if (hasPrivate || hasPublic) {
+    fail(`Only half of the SSH key pair exists (${hasPrivate ? privatePath : publicPath}). Restore the other half, or delete it so a new pair is made.`);
+  }
+  if (publicPath !== `${privatePath}.pub`) {
+    fail(`SSH key ${publicPath} is missing. ssh-keygen writes <private>.pub, so create it yourself or use matching paths.`);
+  }
+  console.log(`→ Creating the server's SSH key pair: ${privatePath}`);
+  const result = spawnSync("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-C", "logo-service", "-f", privatePath], { stdio: "inherit" });
+  if (result.error || result.status !== 0) fail(`ssh-keygen failed. Create the key yourself (DEPLOY.md step 1).`);
+  console.log("✓ SSH key created\n");
+  return { privatePath, publicPath };
+}
+
 export function readTfvars() {
   if (!existsSync(TFVARS)) fail("deploy/terraform/terraform.tfvars is missing. Fill it in first (DEPLOY.md step 3).");
   return parseTfvars(readFileSync(TFVARS, "utf8"));
