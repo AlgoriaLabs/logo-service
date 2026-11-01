@@ -22,3 +22,8 @@ output "ssh" {
 output "logs" {
   value = "ssh ubuntu@${oci_core_instance.app.public_ip} 'cd /opt/logo-agent && sudo docker compose logs -f --tail 100 app'"
 }
+
+output "deploy_logs" {
+  description = "What the auto-update timer did (every 2 minutes)."
+  value       = "ssh ubuntu@${oci_core_instance.app.public_ip} 'journalctl -u logo-agent-update -n 50 --no-pager'"
+}

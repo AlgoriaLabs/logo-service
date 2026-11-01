@@ -1,0 +1,128 @@
+# CD: test → publish the image to GHCR → wait for the server to run it → check the live service.
+#
+#   push to main  → tags :main and :sha-<7>     (servers with app_tag = "main" pull it: testnet)
+#   push tag v*   → tags :<version>, :stable    (servers with app_tag = "stable" pull it: mainnet)
+#
+# The server pulls new images by itself every 2 minutes (infra/server/update.sh), so this workflow holds no
+# server credentials. Repository variables (Settings → Secrets and variables → Actions → Variables):
+#   DEPLOY_URL      https://logo.example.com   enables the verify stage (leave unset to only publish)
+#   DEPLOY_CHANNEL  main | stable              which app_tag that server follows (default main)
+#   SMOKE_PAY       true                       also make one real paid testnet call with provider-kit try
+name: cd
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    name: publish image
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.version.outputs.short }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.name.outputs.image }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=main,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=raw,value=stable,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          # amd64 for anywhere, arm64 for the Oracle Always Free Ampere VM. Every dependency is pure JS.
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: APP_VERSION=${{ steps.version.outputs.short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Summary
+        run: |
+          {
+            echo "### Published"
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  verify:
+    name: verify live service
+    needs: image
+    if: >-
+      vars.DEPLOY_URL != '' && (
+        (github.ref_type == 'branch' && (vars.DEPLOY_CHANNEL == '' || vars.DEPLOY_CHANNEL == 'main')) ||
+        (github.ref_type == 'tag' && vars.DEPLOY_CHANNEL == 'stable')
+      )
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ vars.DEPLOY_CHANNEL == 'stable' && 'mainnet' || 'testnet' }}
+      url: ${{ vars.DEPLOY_URL }}
+    env:
+      URL: ${{ vars.DEPLOY_URL }}
+      MANIFEST: ${{ vars.DEPLOY_URL }}/.well-known/stellar-agent-services.json
+      VERSION: ${{ needs.image.outputs.version }}
+    steps:
+      - name: Wait for the server to run ${{ needs.image.outputs.version }}
+        id: live
+        run: |
+          # The server's timer checks every 2 minutes; a pull and restart on ARM takes about a minute more.
+          for i in $(seq 1 60); do
+            body="$(curl -fsS --max-time 10 "$URL/healthz" || true)"
+            if [ "$(echo "$body" | jq -r '.version // empty' 2>/dev/null)" = "$VERSION" ]; then
+              echo "live: $body"
+              echo "network=$(echo "$body" | jq -r .network)" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "waiting ($i/60): ${body:-no answer}"
+            sleep 15
+          done
+          echo "::error::$URL did not report version $VERSION within 15 minutes. On the server: journalctl -u logo-agent-update"
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Provider Standard v1 checks (verifier, no payment)
+        run: npm run --silent verifier -- check "$MANIFEST"
+      - name: How agents see the service (fails until registered on 8004)
+        continue-on-error: true
+        run: npm run --silent provider-kit -- check --manifest "$MANIFEST"
+      - name: One real paid call on testnet (provider-kit try)
+        if: vars.SMOKE_PAY == 'true' && steps.live.outputs.network == 'testnet'
+        run: npm run --silent provider-kit -- try --manifest "$MANIFEST" --yes

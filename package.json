@@ -9,16 +9,16 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "setup:kit": "bash scripts/setup-kit.sh",
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/server.js",
     "dev": "npm run build && npm start",
     "demo": "npm run build --silent && node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/cli/demo.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "provider-kit": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/provider-kit/dist/cli/index.js",
-    "verifier": "node --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/verifier/dist/cli/index.js",
-    "stellar-pay": "node --disable-warning=ExperimentalWarning vendor/stellar-agent-services/packages/payment-client/dist/cli.js"
+    "provider-kit": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/provider-kit/dist/cli/index.js",
+    "verifier": "node --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/verifier/dist/cli/index.js",
+    "stellar-pay": "node --disable-warning=ExperimentalWarning node_modules/@stellar-agent-services/payment-client/dist/cli.js",
+    "vendor:kit": "bash scripts/vendor-kit.sh"
   },
   "dependencies": {
     "@fontsource/archivo-black": "5.3.0",
@@ -36,8 +36,9 @@
     "@fontsource/space-grotesk": "5.3.0",
     "@fontsource/syne": "5.3.0",
     "@hono/node-server": "2.1.5",
-    "@stellar-agent-services/protocol": "file:vendor/stellar-agent-services/packages/protocol",
-    "@stellar-agent-services/provider-kit": "file:vendor/stellar-agent-services/packages/provider-kit",
+    "@stellar-agent-services/payment-client": "file:vendor/stellar-agent-services-payment-client-0.0.0.tgz",
+    "@stellar-agent-services/protocol": "file:vendor/stellar-agent-services-protocol-0.0.0.tgz",
+    "@stellar-agent-services/provider-kit": "file:vendor/stellar-agent-services-provider-kit-0.0.0.tgz",
     "hono": "4.13.14",
     "lucide-static": "1.63.0",
     "opentype.js": "1.3.4",
@@ -45,10 +46,15 @@
     "svg-to-pdfkit": "0.1.8"
   },
   "devDependencies": {
+    "@stellar-agent-services/verifier": "file:vendor/stellar-agent-services-verifier-0.0.0.tgz",
     "@types/node": "22.20.5",
     "@types/opentype.js": "1.3.10",
     "@types/pdfkit": "0.17.7",
     "typescript": "6.0.3",
     "vitest": "4.1.12"
+  },
+  "overrides": {
+    "@stellar/stellar-sdk": "16.3.1",
+    "axios": "1.20.0"
   }
 }

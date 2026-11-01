@@ -98,7 +98,7 @@ resource "oci_core_instance" "app" {
 
   metadata = {
     ssh_authorized_keys = trimspace(file(pathexpand(var.ssh_public_key_path)))
-    user_data           = base64encode(templatefile("${path.module}/cloud-init.yaml.tftpl", { repo_url = var.app_repo_url }))
+    user_data           = base64encode(templatefile("${path.module}/cloud-init.yaml.tftpl", {}))
   }
 
   lifecycle {

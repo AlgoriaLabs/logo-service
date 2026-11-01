@@ -18,9 +18,13 @@ cloudflare_zone_id    = "xxxx"             # ★
 hostname              = "logo.example.com" # ★
 
 # ── App ──────────────────────────────────────────────────────────────────────
-app_repo_url = "https://github.com/you/stellar-logo-agent.git" # ★
-app_git_ref  = "main"
-price_usdc   = "0.10"
+# The image CI publishes, and the channel the server follows:
+#   "main"   = every push to main (testnet)   "stable" = every v* tag (mainnet)   "sha-abc1234" = pinned
+image      = "ghcr.io/algorialabs/stellar-logo-agent"
+app_tag    = "main"
+price_usdc = "0.10"
+# ghcr_username = ""   # only if the image is private
+# ghcr_token    = ""   # classic token with read:packages
 
 pay_to_testnet   = "G..."                  # ★ for testnet
 agent_id_testnet = ""                      # fill after registering, then apply

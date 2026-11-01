@@ -31,7 +31,10 @@ const provider = createProvider({
   retentionSeconds: config.retentionSeconds,
   provider: {
     name: "Stellar Logo Agent",
-    description: "Logo designer agent: turns a GitHub repository into logo concepts (SVG) and a PDF presentation. Paid per job in USDC.",
+    // Search (stellar-agent-search, 8004 explorers) matches only this name and description, so they carry the
+    // words buyers type. `provider-kit check` lists any service word search would miss.
+    description:
+      "Logo designer and logo maker for software projects: reads a GitHub repository and designs branding concepts (logos, wordmarks, monograms, icons) as SVG files with a PDF brand presentation.",
     ...(network.agentId === undefined ? {} : { agentId: network.agentId }),
     dataUse: { storesInputs: false, trainsOnInputs: false },
   },
@@ -58,7 +61,8 @@ await provider.ready().catch((error: unknown) => {
 
 const app = new Hono();
 
-app.get("/healthz", (c) => c.json({ ok: true, network: network.name }));
+// CD polls this for `version` to know the new image is live.
+app.get("/healthz", (c) => c.json({ ok: true, network: network.name, version: process.env["APP_VERSION"] ?? "dev" }));
 
 app.get("/files/:bundle/:name", async (c) => {
   const file = await files.read(c.req.param("bundle"), c.req.param("name"));

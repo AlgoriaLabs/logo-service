@@ -1,14 +1,12 @@
 #cloud-config
-# First boot only: Docker and a clone of the app. Terraform's deploy step (deploy.tf) writes .env,
-# checks out the requested ref and starts the containers.
+# First boot only: Docker and the app folder. Terraform's deploy step (deploy.tf) installs the compose file, .env
+# and the auto-update timer, then starts the containers.
 package_update: true
 packages:
-  - git
   - ca-certificates
   - curl
 runcmd:
   - curl -fsSL https://get.docker.com | sh
   - systemctl enable --now docker
   - usermod -aG docker ubuntu
-  - git clone --depth 1 '${repo_url}' /opt/logo-agent
-  - git -C /opt/logo-agent remote set-url origin '${repo_url}'
+  - mkdir -p /opt/logo-agent

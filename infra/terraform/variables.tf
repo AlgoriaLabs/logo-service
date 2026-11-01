@@ -99,16 +99,29 @@ variable "hostname" {
 
 # ── The app ───────────────────────────────────────────────────────────────────
 
-variable "app_repo_url" {
-  description = "Git URL of this repository (your fork). Public, or https://<token>@github.com/... for a private one."
+variable "image" {
+  description = "Container image CI publishes (lowercase)."
   type        = string
-  sensitive   = true
+  default     = "ghcr.io/algorialabs/stellar-logo-agent"
 }
 
-variable "app_git_ref" {
-  description = "Branch, tag or commit to deploy."
+variable "app_tag" {
+  description = "Image tag the server follows: main (every push to main), stable (every v* release tag), or sha-<7> to pin."
   type        = string
   default     = "main"
+}
+
+variable "ghcr_username" {
+  description = "Only for a private image: GitHub user that owns ghcr_token."
+  type        = string
+  default     = ""
+}
+
+variable "ghcr_token" {
+  description = "Only for a private image: a classic token with read:packages. Leave empty for a public image."
+  type        = string
+  default     = ""
+  sensitive   = true
 }
 
 variable "price_usdc" {

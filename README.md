@@ -58,6 +58,25 @@ one small LLM call, and a prompt injection in a README can't produce arbitrary S
 
 With Terraform, it's `network = "mainnet"` in `terraform.tfvars` and `terraform apply` (or `make switch NET=mainnet`).
 
+## CI/CD
+
+```
+git push main ──▶ ci (typecheck, tests, offline render, terraform validate, shellcheck)
+                   └─▶ image: ghcr.io/algorialabs/stellar-logo-agent :main :sha-<7>   (amd64 + arm64)
+                         └─▶ server timer pulls it (≤ 2 min, pull-based: CI holds no server credentials)
+                               └─▶ verify: /healthz reports the new version → verifier check
+                                     → provider-kit check → provider-kit try (one real testnet payment, optional)
+git tag v1.2.0 ──▶ same, tagged :1.2.0 :stable  (the mainnet server follows stable)
+```
+
+| Workflow | Runs on | Does |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | pull requests, branch pushes, and as CD's first stage | tests, render, Terraform `fmt`/`validate`, shellcheck, image build |
+| `.github/workflows/cd.yml` | push to `main`, `v*` tags, manual | publishes the image, then verifies the live service when `DEPLOY_URL` is set |
+
+The server follows one image tag (`app_tag`): `main` (testnet), `stable` (mainnet) or `sha-<7>` to pin a build.
+Rolling back is `make rollback TAG=sha-abc1234`. Infrastructure changes stay a reviewed `make apply` from your machine.
+
 ## Layout
 
 | Path | What |
@@ -73,23 +92,39 @@ With Terraform, it's `network = "mainnet"` in `terraform.tfvars` and `terraform 
 | `src/pipeline/pdf.ts` | PDF presentation |
 | `src/pipeline/files.ts` | Output storage and expiry |
 | `src/cli/demo.ts` | `npm run demo`: the pipeline without payments |
-| `infra/terraform/` | Oracle Always Free VM + Cloudflare Tunnel + deploy |
-| `Dockerfile`, `compose.yaml` | App image (amd64/arm64) and cloudflared |
+| `infra/terraform/` | Oracle Always Free VM + Cloudflare Tunnel + the server's `.env` and updater |
+| `infra/server/` | Production compose (image + cloudflared) and the 2-minute auto-update timer |
+| `.github/workflows/` | CI and CD |
+| `Dockerfile`, `compose.yaml` | App image (amd64/arm64) and a local container run |
+| `vendor/`, `KIT_REF` | The stellar-agent-services kit, packed (`scripts/vendor-kit.sh`, `make kit`) |
 | `test/` | Offline tests, including a full 402 → pay → result job |
 
 ## Development
 
 ```bash
-make setup     # build the vendored kit (pinned in KIT_REF) and install
-make test      # offline tests
-make demo      # draw logos without payments
-make dev       # the paid service on http://localhost:8787
+make setup        # install; the kit is already in vendor/
+make test         # offline tests
+make demo         # draw logos without payments
+make dev          # the paid service on http://localhost:8787
+make try-local    # pay it once with test money: no wallet to set up
+make check-local  # Provider Standard self-check + how agents see you
+```
+
+### The stellar-agent-services kit
+
+The kit isn't on npm yet, so `vendor/` holds its packages (`protocol`, `payment-client`, `provider-kit`,
+`verifier`) packed at the commit in `KIT_REF`, the same way `npm create stellar-service` vendors it. The npm
+`overrides` in `package.json` keep one copy of the Stellar SDK, as the kit requires. To update:
+
+```bash
+make kit REF=main    # clone + build + pack at that ref, reinstall, run the tests
 ```
 
 ## Security
 
-- The server holds **no Stellar secret key**: only public `payTo` addresses. Registration signs on your machine
-  through the Stellar CLI keychain.
+- **No Stellar secret key anywhere**: the server knows only public `payTo` addresses. The owner steps (USDC
+  trustline, 8004 registration, validation requests) are approved in your own wallet on a page `provider-kit`
+  opens on your laptop. CI holds no secrets either: the server pulls images instead of CI pushing to it.
 - Repository content is untrusted: it is labelled as such in the prompt, and nothing the model returns is used
   unless it matches the catalog.
 - SVGs contain no `<text>` (it is outlined), scripts, links or external references; files are served with a sandboxing CSP.

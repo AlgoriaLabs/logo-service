@@ -1,10 +1,12 @@
-# Local:  docker compose up --build            → the app on http://localhost:8787
-# Server: COMPOSE_PROFILES=tunnel (set in .env) → also starts cloudflared, which publishes the app over
-#         HTTPS through Cloudflare Tunnel. The server opens no inbound port.
+# Local container run: docker compose up --build → http://localhost:8787
+# The server uses infra/server/compose.yaml instead (the image CI publishes, plus Cloudflare Tunnel).
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        APP_VERSION: local
     image: stellar-logo-agent:local
     env_file: .env
     environment:
@@ -14,17 +16,6 @@ services:
       - "127.0.0.1:8787:8787"
     volumes:
       - data:/data
-    restart: unless-stopped
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    profiles: ["tunnel"]
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env (terraform output tunnel_token)}
-    depends_on:
-      app:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:

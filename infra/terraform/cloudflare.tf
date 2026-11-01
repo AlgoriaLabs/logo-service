@@ -19,9 +19,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "app" {
   config = {
     ingress = [
       {
-        hostname = var.hostname
         # "app" is the compose service name; cloudflared runs in the same compose network.
-        service = "http://app:8787"
+        hostname = var.hostname
+        service  = "http://app:8787"
       },
       {
         service = "http_status:404"

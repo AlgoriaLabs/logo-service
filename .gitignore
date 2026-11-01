@@ -1,5 +1,5 @@
 node_modules/
-vendor/
+# vendor/ holds the packed kit and is committed
 dist/
 out/
 data/
